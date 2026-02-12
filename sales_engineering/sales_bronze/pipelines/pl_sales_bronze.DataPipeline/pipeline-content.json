@@ -1,0 +1,647 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "type": "Lookup",
+        "typeProperties": {
+          "source": {
+            "type": "JsonSource",
+            "formatSettings": {
+              "type": "JsonReadSettings"
+            },
+            "storeSettings": {
+              "type": "LakehouseReadSettings",
+              "recursive": true,
+              "enablePartitionDiscovery": false
+            }
+          },
+          "datasetSettings": {
+            "type": "Json",
+            "typeProperties": {
+              "location": {
+                "type": "LakehouseLocation",
+                "folderPath": "sales_bronze/config",
+                "fileName": "sales_config.json"
+              }
+            },
+            "schema": {},
+            "linkedService": {
+              "name": "sales_lakehouse_dev",
+              "properties": {
+                "type": "Lakehouse",
+                "typeProperties": {
+                  "artifactId": "fa7db777-cb40-99a7-418b-14754ebd26eb",
+                  "workspaceId": "00000000-0000-0000-0000-000000000000",
+                  "rootFolder": "Files"
+                },
+                "annotations": []
+              }
+            },
+            "annotations": []
+          },
+          "firstRowOnly": false
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "lkup - config file",
+        "dependsOn": []
+      },
+      {
+        "type": "SetVariable",
+        "typeProperties": {
+          "variableName": "ingest_ts",
+          "value": {
+            "value": "@convertFromUtc(utcNow(), 'AUS Eastern Standard Time', 'yyyy-MM-dd HH:mm:ss')",
+            "type": "Expression"
+          }
+        },
+        "policy": {
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "ingest_timestamp",
+        "dependsOn": [
+          {
+            "activity": "lkup - config file",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "ForEach",
+        "typeProperties": {
+          "isSequential": false,
+          "items": {
+            "value": "@activity('lkup - config file').output.value",
+            "type": "Expression"
+          },
+          "activities": [
+            {
+              "type": "GetMetadata",
+              "typeProperties": {
+                "datasetSettings": {
+                  "type": "DelimitedText",
+                  "typeProperties": {
+                    "location": {
+                      "type": "LakehouseLocation",
+                      "folderPath": {
+                        "value": "@concat(pipeline().parameters.schema_layer,'/',item().name)",
+                        "type": "Expression"
+                      }
+                    },
+                    "columnDelimiter": ",",
+                    "quoteChar": "\"",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true
+                  },
+                  "schema": [],
+                  "linkedService": {
+                    "name": "sales_lakehouse_dev",
+                    "properties": {
+                      "type": "Lakehouse",
+                      "typeProperties": {
+                        "artifactId": "fa7db777-cb40-99a7-418b-14754ebd26eb",
+                        "workspaceId": "00000000-0000-0000-0000-000000000000",
+                        "rootFolder": "Files"
+                      },
+                      "annotations": []
+                    }
+                  },
+                  "annotations": []
+                },
+                "fieldList": [
+                  "childItems"
+                ],
+                "storeSettings": {
+                  "type": "AzureBlobStorageReadSettings",
+                  "recursive": true,
+                  "enablePartitionDiscovery": false
+                },
+                "formatSettings": {
+                  "type": "DelimitedTextReadSettings"
+                }
+              },
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureInput": false,
+                "secureOutput": false
+              },
+              "name": "check for file",
+              "dependsOn": []
+            },
+            {
+              "type": "IfCondition",
+              "typeProperties": {
+                "expression": {
+                  "value": "@greater(length(activity('check for file').output.childItems), 0)\n\n",
+                  "type": "Expression"
+                },
+                "ifTrueActivities": [
+                  {
+                    "type": "Copy",
+                    "typeProperties": {
+                      "source": {
+                        "type": "DelimitedTextSource",
+                        "formatSettings": {
+                          "type": "DelimitedTextReadSettings"
+                        },
+                        "additionalColumns": [
+                          {
+                            "name": "ingest_timestamp",
+                            "value": {
+                              "value": "@{variables('ingest_ts')}",
+                              "type": "Expression"
+                            }
+                          }
+                        ],
+                        "storeSettings": {
+                          "type": "LakehouseReadSettings",
+                          "recursive": true,
+                          "wildcardFolderPath": {
+                            "value": "@concat(pipeline().parameters.schema_layer, '/',item().name)",
+                            "type": "Expression"
+                          },
+                          "wildcardFileName": "*.csv",
+                          "enablePartitionDiscovery": false
+                        },
+                        "datasetSettings": {
+                          "type": "DelimitedText",
+                          "typeProperties": {
+                            "location": {
+                              "type": "LakehouseLocation"
+                            },
+                            "columnDelimiter": ",",
+                            "quoteChar": "\"",
+                            "escapeChar": "\\",
+                            "firstRowAsHeader": true
+                          },
+                          "schema": [],
+                          "linkedService": {
+                            "name": "sales_lakehouse_dev",
+                            "properties": {
+                              "type": "Lakehouse",
+                              "typeProperties": {
+                                "artifactId": "fa7db777-cb40-99a7-418b-14754ebd26eb",
+                                "workspaceId": "00000000-0000-0000-0000-000000000000",
+                                "rootFolder": "Files"
+                              },
+                              "annotations": []
+                            }
+                          },
+                          "annotations": []
+                        }
+                      },
+                      "sink": {
+                        "type": "LakehouseTableSink",
+                        "tableActionOption": "OverwriteSchema",
+                        "applyVOrder": true,
+                        "partitionOption": "None",
+                        "datasetSettings": {
+                          "type": "LakehouseTable",
+                          "typeProperties": {
+                            "schema": {
+                              "value": "@pipeline().parameters.schema_layer",
+                              "type": "Expression"
+                            },
+                            "table": {
+                              "value": "@item().name",
+                              "type": "Expression"
+                            }
+                          },
+                          "schema": [],
+                          "linkedService": {
+                            "name": "sales_lakehouse_dev",
+                            "properties": {
+                              "type": "Lakehouse",
+                              "typeProperties": {
+                                "artifactId": "fa7db777-cb40-99a7-418b-14754ebd26eb",
+                                "workspaceId": "00000000-0000-0000-0000-000000000000",
+                                "rootFolder": "Tables"
+                              },
+                              "annotations": []
+                            }
+                          },
+                          "annotations": []
+                        }
+                      },
+                      "translator": {
+                        "type": "TabularTranslator",
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                          "allowDataTruncation": true,
+                          "treatBooleanAsNumber": false
+                        }
+                      },
+                      "enableStaging": false
+                    },
+                    "policy": {
+                      "timeout": "0.12:00:00",
+                      "retry": 0,
+                      "retryIntervalInSeconds": 30,
+                      "secureInput": false,
+                      "secureOutput": false
+                    },
+                    "name": "Copy file to lake table",
+                    "dependsOn": []
+                  },
+                  {
+                    "type": "Copy",
+                    "typeProperties": {
+                      "source": {
+                        "type": "BinarySource",
+                        "formatSettings": {
+                          "type": "BinaryReadSettings"
+                        },
+                        "storeSettings": {
+                          "type": "LakehouseReadSettings",
+                          "recursive": true,
+                          "wildcardFolderPath": {
+                            "value": "@concat(pipeline().parameters.schema_layer, '/',item().name)",
+                            "type": "Expression"
+                          }
+                        },
+                        "datasetSettings": {
+                          "type": "Binary",
+                          "typeProperties": {
+                            "location": {
+                              "type": "LakehouseLocation"
+                            }
+                          },
+                          "linkedService": {
+                            "name": "sales_lakehouse_dev",
+                            "properties": {
+                              "type": "Lakehouse",
+                              "typeProperties": {
+                                "artifactId": "fa7db777-cb40-99a7-418b-14754ebd26eb",
+                                "workspaceId": "00000000-0000-0000-0000-000000000000",
+                                "rootFolder": "Files"
+                              },
+                              "annotations": []
+                            }
+                          },
+                          "annotations": []
+                        }
+                      },
+                      "sink": {
+                        "type": "BinarySink",
+                        "storeSettings": {
+                          "type": "LakehouseWriteSettings",
+                          "copyBehavior": "PreserveHierarchy"
+                        },
+                        "datasetSettings": {
+                          "type": "Binary",
+                          "typeProperties": {
+                            "location": {
+                              "type": "LakehouseLocation",
+                              "folderPath": {
+                                "value": "@concat(pipeline().parameters.schema_layer, '/', item().archive_path, '/', formatDateTime(variables('ingest_ts'), 'yyyy-MM-dd'))",
+                                "type": "Expression"
+                              }
+                            }
+                          },
+                          "linkedService": {
+                            "name": "sales_lakehouse_dev",
+                            "properties": {
+                              "type": "Lakehouse",
+                              "typeProperties": {
+                                "artifactId": "fa7db777-cb40-99a7-418b-14754ebd26eb",
+                                "workspaceId": "00000000-0000-0000-0000-000000000000",
+                                "rootFolder": "Files"
+                              },
+                              "annotations": []
+                            }
+                          },
+                          "annotations": []
+                        }
+                      },
+                      "enableStaging": false
+                    },
+                    "policy": {
+                      "timeout": "0.12:00:00",
+                      "retry": 0,
+                      "retryIntervalInSeconds": 30,
+                      "secureInput": false,
+                      "secureOutput": false
+                    },
+                    "name": "Archive file",
+                    "dependsOn": [
+                      {
+                        "activity": "Copy file to lake table",
+                        "dependencyConditions": [
+                          "Succeeded"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Delete",
+                    "typeProperties": {
+                      "enableLogging": false,
+                      "datasetSettings": {
+                        "type": "Binary",
+                        "typeProperties": {
+                          "location": {
+                            "type": "LakehouseLocation",
+                            "folderPath": {
+                              "value": "@concat(pipeline().parameters.schema_layer, '/',item().source_path)",
+                              "type": "Expression"
+                            }
+                          }
+                        },
+                        "linkedService": {
+                          "name": "sales_lakehouse_dev",
+                          "properties": {
+                            "type": "Lakehouse",
+                            "typeProperties": {
+                              "artifactId": "fa7db777-cb40-99a7-418b-14754ebd26eb",
+                              "workspaceId": "00000000-0000-0000-0000-000000000000",
+                              "rootFolder": "Files"
+                            },
+                            "annotations": []
+                          }
+                        },
+                        "annotations": []
+                      },
+                      "storeSettings": {
+                        "type": "AzureBlobStorageReadSettings",
+                        "recursive": true,
+                        "wildcardFileName": "*.csv",
+                        "enablePartitionDiscovery": false
+                      }
+                    },
+                    "policy": {
+                      "timeout": "0.12:00:00",
+                      "retry": 0,
+                      "retryIntervalInSeconds": 30,
+                      "secureInput": false,
+                      "secureOutput": false
+                    },
+                    "name": "Delete - csv file",
+                    "dependsOn": [
+                      {
+                        "activity": "Archive file",
+                        "dependencyConditions": [
+                          "Succeeded"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Copy",
+                    "typeProperties": {
+                      "source": {
+                        "type": "DataWarehouseSource",
+                        "sqlReaderQuery": "SELECT 1 AS dummy",
+                        "partitionOption": "None",
+                        "queryTimeout": "02:00:00",
+                        "additionalColumns": [
+                          {
+                            "name": "table_name",
+                            "value": {
+                              "value": "@item().name",
+                              "type": "Expression"
+                            }
+                          },
+                          {
+                            "name": "folder",
+                            "value": {
+                              "value": "Files/sales_bronze/archive/@{item().name}/@{convertFromUtc(utcNow(), 'AUS Eastern Standard Time', 'yyyy-MM-dd')}",
+                              "type": "Expression"
+                            }
+                          },
+                          {
+                            "name": "layer",
+                            "value": {
+                              "value": "@pipeline().parameters.schema_layer",
+                              "type": "Expression"
+                            }
+                          },
+                          {
+                            "name": "watermark",
+                            "value": {
+                              "value": "@variables('ingest_ts')",
+                              "type": "Expression"
+                            }
+                          },
+                          {
+                            "name": "pipeline_run_id",
+                            "value": {
+                              "value": "@pipeline().RunId",
+                              "type": "Expression"
+                            }
+                          },
+                          {
+                            "name": "pipeline_name",
+                            "value": {
+                              "value": "@pipeline().PipelineName",
+                              "type": "Expression"
+                            }
+                          },
+                          {
+                            "name": "pipeline_trigger_time",
+                            "value": {
+                              "value": "@convertFromUtc(pipeline().TriggerTime, 'AUS Eastern Standard Time', 'yyyy-MM-dd HH:mm:ss')",
+                              "type": "Expression"
+                            }
+                          }
+                        ],
+                        "datasetSettings": {
+                          "type": "DataWarehouseTable",
+                          "schema": [],
+                          "linkedService": {
+                            "name": "sales_warehouse_dev",
+                            "properties": {
+                              "type": "DataWarehouse",
+                              "typeProperties": {
+                                "artifactId": "d43408e3-0d53-4438-9b28-ca87bab16c67",
+                                "endpoint": "msiaocc4u4vupoww3vafjdnwky-ujyrf4mxuioufdyxaa3fgxuhk4.datawarehouse.fabric.microsoft.com",
+                                "workspaceId": "f11271a2-a297-421d-8f17-0036535e8757"
+                              },
+                              "annotations": []
+                            }
+                          },
+                          "annotations": []
+                        }
+                      },
+                      "sink": {
+                        "type": "LakehouseTableSink",
+                        "tableActionOption": "Append",
+                        "applyVOrder": true,
+                        "partitionOption": "None",
+                        "datasetSettings": {
+                          "type": "LakehouseTable",
+                          "typeProperties": {
+                            "schema": "dbo",
+                            "table": "audit"
+                          },
+                          "schema": [],
+                          "linkedService": {
+                            "name": "sales_lakehouse_dev",
+                            "properties": {
+                              "type": "Lakehouse",
+                              "typeProperties": {
+                                "artifactId": "fa7db777-cb40-99a7-418b-14754ebd26eb",
+                                "workspaceId": "00000000-0000-0000-0000-000000000000",
+                                "rootFolder": "Tables"
+                              },
+                              "annotations": []
+                            }
+                          },
+                          "annotations": []
+                        }
+                      },
+                      "translator": {
+                        "type": "TabularTranslator",
+                        "mappings": [
+                          {
+                            "source": {
+                              "name": "layer",
+                              "type": "String"
+                            },
+                            "sink": {
+                              "name": "layer",
+                              "physicalType": "string"
+                            }
+                          },
+                          {
+                            "source": {
+                              "name": "table_name",
+                              "type": "String"
+                            },
+                            "sink": {
+                              "name": "table_name",
+                              "physicalType": "string"
+                            }
+                          },
+                          {
+                            "source": {
+                              "name": "folder",
+                              "type": "String"
+                            },
+                            "sink": {
+                              "name": "folder",
+                              "physicalType": "string"
+                            }
+                          },
+                          {
+                            "source": {
+                              "name": "pipeline_run_id",
+                              "type": "String"
+                            },
+                            "sink": {
+                              "name": "pipeline_run_id",
+                              "physicalType": "string"
+                            }
+                          },
+                          {
+                            "source": {
+                              "name": "pipeline_name",
+                              "type": "String"
+                            },
+                            "sink": {
+                              "name": "pipeline_name",
+                              "physicalType": "string"
+                            }
+                          },
+                          {
+                            "source": {
+                              "name": "pipeline_trigger_time",
+                              "type": "String"
+                            },
+                            "sink": {
+                              "name": "pipeline_trigger_time",
+                              "physicalType": "string"
+                            }
+                          },
+                          {
+                            "source": {
+                              "name": "watermark"
+                            },
+                            "sink": {
+                              "name": "watermark",
+                              "physicalType": "timestamp"
+                            }
+                          }
+                        ],
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                          "allowDataTruncation": true,
+                          "treatBooleanAsNumber": false
+                        }
+                      },
+                      "enableStaging": false
+                    },
+                    "policy": {
+                      "timeout": "0.12:00:00",
+                      "retry": 0,
+                      "retryIntervalInSeconds": 30,
+                      "secureInput": false,
+                      "secureOutput": false
+                    },
+                    "name": "Update Audit Table",
+                    "dependsOn": [
+                      {
+                        "activity": "Delete - csv file",
+                        "dependencyConditions": [
+                          "Succeeded"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "ifFalseActivities": [
+                  {
+                    "type": "Wait",
+                    "typeProperties": {
+                      "waitTimeInSeconds": 1
+                    },
+                    "name": "no csv file",
+                    "dependsOn": []
+                  }
+                ]
+              },
+              "name": "skip if no file to process",
+              "dependsOn": [
+                {
+                  "activity": "check for file",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "name": "loop through config file",
+        "dependsOn": [
+          {
+            "activity": "ingest_timestamp",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      }
+    ],
+    "parameters": {
+      "schema_layer": {
+        "type": "string",
+        "defaultValue": "sales_bronze"
+      }
+    },
+    "variables": {
+      "ingest_ts": {
+        "type": "String"
+      }
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "d9808b82-5053-9574-4b7c-bd966e337de8",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "pipeline_run_id": {
+              "value": {
+                "value": "@pipeline().RunId",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "pipeline_name": {
+              "value": {
+                "value": "@pipeline().PipelineName",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "pipeline_trigger_time": {
+              "value": {
+                "value": "@convertFromUtc(pipeline().TriggerTime, 'AUS Eastern Standard Time', 'yyyy-MM-dd HH:mm:ss')",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sessionTag": "keepItAlive"
+        },
+        "externalReferences": {
+          "connection": "06cb27fe-f9a0-4386-b23a-89f1e52979c1"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Clean Bronze Sales Data",
+        "dependsOn": [
+          {
+            "activity": "Bronze GE validations",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "9b46f98b-1941-bd03-4210-745a09be0e68",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        },
+        "externalReferences": {
+          "connection": "06cb27fe-f9a0-4386-b23a-89f1e52979c1"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Bronze GE validations",
+        "dependsOn": []
+      }
+    ],
+    "parameters": {
+      "schema_layer": {
+        "type": "string",
+        "defaultValue": "sales_silver"
+      }
+    }
+  }
+}
