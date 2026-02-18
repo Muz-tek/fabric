@@ -9,7 +9,7 @@
 # META   "dependencies": {
 # META     "lakehouse": {
 # META       "default_lakehouse": "4ebd26eb-1475-418b-99a7-cb40fa7db777",
-# META       "default_lakehouse_name": "sales_lakehouse_dev",
+# META       "default_lakehouse_name": "sales_lakehouse",
 # META       "default_lakehouse_workspace_id": "f11271a2-a297-421d-8f17-0036535e8757",
 # META       "known_lakehouses": [
 # META         {
@@ -55,7 +55,6 @@ import great_expectations as gx
 RUN_ID = datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
 print(f'RUN_ID={RUN_ID}')
 
-
 # METADATA ********************
 
 # META {
@@ -73,7 +72,9 @@ print(f'RUN_ID={RUN_ID}')
 # CELL ********************
 
 # ---- EDIT THESE ----
-LAKEHOUSE_NAME = 'sales_lakehouse_dev'
+# variable library
+varLibrary = notebookutils.variableLibrary.getLibrary("sales_variable_library")
+LAKEHOUSE_NAME = varLibrary.lakehouse
 SCHEMA = 'sales_bronze'
 
 # Persist DQ results here

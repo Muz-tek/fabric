@@ -9,7 +9,7 @@
 # META   "dependencies": {
 # META     "lakehouse": {
 # META       "default_lakehouse": "4ebd26eb-1475-418b-99a7-cb40fa7db777",
-# META       "default_lakehouse_name": "sales_lakehouse_dev",
+# META       "default_lakehouse_name": "sales_lakehouse",
 # META       "default_lakehouse_workspace_id": "f11271a2-a297-421d-8f17-0036535e8757",
 # META       "known_lakehouses": [
 # META         {
@@ -79,9 +79,13 @@ from pyspark.sql.functions import *
 from notebookutils import mssparkutils
 import sys, os
 
+# variable library
+varLibrary = notebookutils.variableLibrary.getLibrary("sales_variable_library")
+workspace = varLibary.workspace
+lakehouse = varLibrary.lakehouse
+
 # base parameters
-base_path = "abfss://sales_workspace_dev@onelake.dfs.fabric.microsoft.com/sales_lakehouse_dev.Lakehouse"
-lakehouse = "sales_lakehouse_dev"
+base_path = f"abfss://{workspace}@onelake.dfs.fabric.microsoft.com/{lakehouse}.Lakehouse"
 bronze_schema = "sales_bronze"
 silver_schema = "sales_silver"
 
@@ -100,7 +104,6 @@ DataProcessor = s.salesDataProcessor(spark)
 
 # pipeline parameters - if manually run then define params, else pipeline params
 pipeline_run_id, pipeline_name, pipeline_trigger_time = DataProcessor.init_pipeline_params()
-
 
 
 # METADATA ********************
