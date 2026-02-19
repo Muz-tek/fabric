@@ -9,7 +9,7 @@
 # META   "dependencies": {
 # META     "lakehouse": {
 # META       "default_lakehouse": "4ebd26eb-1475-418b-99a7-cb40fa7db777",
-# META       "default_lakehouse_name": "sales_lakehouse_dev",
+# META       "default_lakehouse_name": "sales_lakehouse",
 # META       "default_lakehouse_workspace_id": "f11271a2-a297-421d-8f17-0036535e8757",
 # META       "known_lakehouses": [
 # META         {
@@ -22,25 +22,39 @@
 
 # CELL ********************
 
-# MAGIC %%sql
-# MAGIC -- create bronze audit table
-# MAGIC CREATE OR REPLACE TABLE sales_lakehouse_dev.dbo.audit
-# MAGIC (
-# MAGIC     layer STRING,
-# MAGIC     table_name STRING,
-# MAGIC     folder STRING,
-# MAGIC     pipeline_run_id STRING,
-# MAGIC     pipeline_name STRING,
-# MAGIC     pipeline_trigger_time STRING,
-# MAGIC     watermark TIMESTAMP
-# MAGIC )
-# MAGIC ;
-# MAGIC -- DROP TABLE sales_lakehouse_dev.dbo.audit
+# variable library
+varLibrary = notebookutils.variableLibrary.getLibrary("sales_variable_library")
+lakehouse = varLibrary.lakehouse
 
 # METADATA ********************
 
 # META {
-# META   "language": "sparksql",
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+spark.sql(f"""
+-- create bronze audit table
+CREATE OR REPLACE TABLE {lakehouse}.dbo.audit
+(
+    layer STRING,
+    table_name STRING,
+    folder STRING,
+    pipeline_run_id STRING,
+    pipeline_name STRING,
+    pipeline_trigger_time STRING,
+    watermark TIMESTAMP
+)
+;
+-- DROP TABLE sales_lakehouse_dev.dbo.audit
+""")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
 # META   "language_group": "synapse_pyspark"
 # META }
 
