@@ -9,7 +9,7 @@
 # META   "dependencies": {
 # META     "lakehouse": {
 # META       "default_lakehouse": "4ebd26eb-1475-418b-99a7-cb40fa7db777",
-# META       "default_lakehouse_name": "sales_lakehouse_dev",
+# META       "default_lakehouse_name": "sales_lakehouse",
 # META       "default_lakehouse_workspace_id": "f11271a2-a297-421d-8f17-0036535e8757",
 # META       "known_lakehouses": [
 # META         {
@@ -110,7 +110,7 @@
 # MAGIC WHERE oi.unit_price_aud IS NOT NULL AND oi.quantity IS NOT NULL AND oi.quantity <> 0
 # MAGIC ORDER BY order_date DESC
 # MAGIC ;
-# MAGIC SELECT * FROM sales_lakehouse_dev.sales_gold.mlv_gold_sales_fact LIMIT 1000
+# MAGIC SELECT * FROM sales_lakehouse.sales_gold.mlv_gold_sales_fact LIMIT 1000
 
 
 # METADATA ********************
@@ -142,7 +142,7 @@
 # MAGIC GROUP BY order_date
 # MAGIC ORDER BY order_date DESC
 # MAGIC ;
-# MAGIC SELECT * FROM sales_lakehouse_dev.sales_gold.mlv_gold_daily_sales LIMIT 1000
+# MAGIC SELECT * FROM sales_lakehouse.sales_gold.mlv_gold_daily_sales LIMIT 1000
 
 
 # METADATA ********************
@@ -171,7 +171,7 @@
 # MAGIC GROUP BY DATE_FORMAT(order_date, 'yyyy-MM')
 # MAGIC ORDER BY  DATE_FORMAT(order_date, 'yyyy-MM') DESC
 # MAGIC ;
-# MAGIC SELECT * FROM sales_lakehouse_dev.sales_gold.mlv_gold_monthly_sales LIMIT 1000
+# MAGIC SELECT * FROM sales_lakehouse.sales_gold.mlv_gold_monthly_sales LIMIT 1000
 
 
 # METADATA ********************
@@ -204,7 +204,7 @@
 # MAGIC GROUP BY sales_rep_id, rep_name, rep_region_state, rep_region_name, DATE_FORMAT(order_date, 'yyyy-MM')
 # MAGIC ORDER BY DATE_FORMAT(order_date, 'yyyy-MM') DESC
 # MAGIC ;
-# MAGIC SELECT * FROM sales_lakehouse_dev.sales_gold.mlv_gold_rep_performance LIMIT 1000
+# MAGIC SELECT * FROM sales_lakehouse.sales_gold.mlv_gold_rep_performance LIMIT 1000
 
 
 # METADATA ********************
@@ -237,7 +237,7 @@
 # MAGIC GROUP BY product_id, product_name, category, DATE_FORMAT(order_date, 'yyyy-MM')
 # MAGIC ORDER BY DATE_FORMAT(order_date, 'yyyy-MM') DESC
 # MAGIC ;
-# MAGIC SELECT * FROM sales_lakehouse_dev.sales_gold.mlv_gold_product_performance LIMIT 1000
+# MAGIC SELECT * FROM sales_lakehouse.sales_gold.mlv_gold_product_performance LIMIT 1000
 
 
 # METADATA ********************
@@ -270,7 +270,7 @@
 # MAGIC GROUP BY customer_id, customer_name, segment
 # MAGIC ORDER BY MAX(order_date) DESC
 # MAGIC ;
-# MAGIC SELECT * FROM sales_lakehouse_dev.sales_gold.mlv_gold_customer_value LIMIT 1000
+# MAGIC SELECT * FROM sales_lakehouse.sales_gold.mlv_gold_customer_value LIMIT 1000
 
 # METADATA ********************
 
