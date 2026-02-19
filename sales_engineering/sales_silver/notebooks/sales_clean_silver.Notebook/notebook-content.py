@@ -73,15 +73,38 @@
 
 # CELL ********************
 
-
 # libraries
 from pyspark.sql.functions import *
 from notebookutils import mssparkutils
 import sys, os
+from datetime import datetime
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# PARAMETERS CELL ********************
+
+# pipeline parameters - default values when running notebook manually
+pipeline_name = "n/a"
+pipeline_run_id = "manual"
+pipeline_trigger_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
 
 # variable library
 varLibrary = notebookutils.variableLibrary.getLibrary("sales_variable_library")
-workspace = varLibary.workspace
+workspace = varLibrary.workspace
 lakehouse = varLibrary.lakehouse
 
 # base parameters
@@ -89,6 +112,7 @@ base_path = f"abfss://{workspace}@onelake.dfs.fabric.microsoft.com/{lakehouse}.L
 bronze_schema = "sales_bronze"
 silver_schema = "sales_silver"
 
+# pathes
 files_path = f"{base_path}/Files/{bronze_schema}"
 table_path = f"{base_path}/Tables/{silver_schema}"
 silver_path = files_path.replace("bronze", "silver")
@@ -101,9 +125,6 @@ sys.path.append("/lakehouse/default/Files/code")
 import importlib, sales_silver_functions as s
 importlib.reload(s)
 DataProcessor = s.salesDataProcessor(spark)
-
-# pipeline parameters - if manually run then define params, else pipeline params
-pipeline_run_id, pipeline_name, pipeline_trigger_time = DataProcessor.init_pipeline_params()
 
 
 # METADATA ********************
@@ -175,8 +196,8 @@ DataProcessor.silver_incremental_load(
 
 DataProcessor.upsert_audit_table(silver_schema, "ordered_items", pipeline_run_id, pipeline_name, pipeline_trigger_time)
 
-display(ordered_items_df)
-display(silver_ordered_items_df)
+# display(ordered_items_df)
+# display(silver_ordered_items_df)
 
 # METADATA ********************
 
@@ -236,19 +257,8 @@ DataProcessor.silver_incremental_load(
 
 DataProcessor.upsert_audit_table(silver_schema, "order_status", pipeline_run_id, pipeline_name, pipeline_trigger_time)
 
-display(order_status_df)
-display(silver_order_status_df)
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
-display(order_status_df.select("order_date").distinct())
+# display(order_status_df)
+# display(silver_order_status_df)
 
 # METADATA ********************
 
@@ -303,8 +313,8 @@ DataProcessor.silver_incremental_load(
 
 DataProcessor.upsert_audit_table(silver_schema, "customers", pipeline_run_id, pipeline_name, pipeline_trigger_time)
 
-display(customer_df)
-display(silver_customer_df)
+# display(customer_df)
+# display(silver_customer_df)
 
 # METADATA ********************
 
@@ -369,8 +379,8 @@ DataProcessor.silver_incremental_load(
 
 DataProcessor.upsert_audit_table(silver_schema, "products", pipeline_run_id, pipeline_name, pipeline_trigger_time)
 
-display(products_df)
-display(silver_products_df)
+# display(products_df)
+# display(silver_products_df)
 
 
 # METADATA ********************
@@ -418,8 +428,8 @@ DataProcessor.silver_incremental_load(
 
 DataProcessor.upsert_audit_table(silver_schema, "regions", pipeline_run_id, pipeline_name, pipeline_trigger_time)
 
-display(regions_df)
-display(silver_regions_df)
+# display(regions_df)
+# display(silver_regions_df)
 
 # METADATA ********************
 
@@ -462,8 +472,8 @@ DataProcessor.silver_incremental_load(
     
 DataProcessor.upsert_audit_table(silver_schema, "sales_reps", pipeline_run_id, pipeline_name, pipeline_trigger_time)
 
-display(sales_reps_df)
-display(silver_sales_reps_df)
+# display(sales_reps_df)
+# display(silver_sales_reps_df)
 
 # METADATA ********************
 
@@ -471,7 +481,3 @@ display(silver_sales_reps_df)
 # META   "language": "python",
 # META   "language_group": "synapse_pyspark"
 # META }
-
-# MARKDOWN ********************
-
-# #### Update Audit Table (only runs if all cells above ran successfully)
