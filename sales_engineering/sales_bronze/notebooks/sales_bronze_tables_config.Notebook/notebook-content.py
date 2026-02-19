@@ -62,7 +62,7 @@ CREATE OR REPLACE TABLE {lakehouse}.dbo.audit
 
 # tables = [
 #     ("customers", "Files/sales_bronze/customers/customers_raw.csv"),
-#     ("order_quantities", "Files/sales_bronze/order_quantities/order_items_raw.csv"),
+#     ("order_quantities", "Files/sales_bronze/ordered_items/order_items_raw.csv"),
 #     ("order_status", "Files/sales_bronze/order_status/orders_raw.csv"),
 #     ("products", "Files/sales_bronze/products/products_raw.csv"),
 #     ("regions", "Files/sales_bronze/regions/lookup_regions.csv"),
