@@ -1,0 +1,10 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/variableLibrary/definition/valueSet/1.0.0/schema.json",
+  "name": "sales_worskspace_prod",
+  "variableOverrides": [
+    {
+      "name": "workspace",
+      "value": "sales_workspace_prod"
+    }
+  ]
+}
